@@ -1,8 +1,8 @@
-::@echo off
+@echo off
 setlocal
 if "%1" == "" goto :usage
-set FFMPEG="c:\tools\ffmpeg64\ffmpeg.exe"
-set FPS=12
+set FFMPEG="c:\tools\ffmpeg.exe"
+set FPS=8
 set WIDTH=480
 
 set INPUT=%1
@@ -31,7 +31,7 @@ set LOGFILE=%LOGDIR%\%BNAME%.%START%.%LENGTH%.log
 set TRIMMED="%TMPDIR%\%BNAME%.%START%.%LENGTH%.%FPS%.mp4"
 if exist %TRIMMED% goto :palette
 echo === TRIM INPUT FILE
-%FFMPEG% -i %INPUT% -ss %START% -t %LENGTH% -vf fps=%FPS%,scale=%WIDTH%:-1:flags=lanczos -an -b:v 5M -y %TRIMMED% 2>> %LOGFILE%
+%FFMPEG% -i %INPUT% -ss %START% -t %LENGTH% -an -vf "scale=%WIDTH%:-1:flags=lanczos" -b:v 10M -y %TRIMMED% 2>> %LOGFILE%
 
 :: generate palette
 :palette
@@ -45,7 +45,7 @@ echo === CALCULATE PALETTE
 set GIF="%OUTDIR%\%BNAME%.%START%.%LENGTH%.%FPS%.gif"
 if exist %GIF% goto :eof
 echo === CONVERT TO ANIMATED GIF
-%FFMPEG% -i %TRIMMED% -i %PALETTE% -r 6 -filter_complex "[x]; [x][1:v] paletteuse" -y %GIF% 2>> %LOGFILE%
+%FFMPEG% -i %TRIMMED% -i %PALETTE% -filter_complex "setpts=0.5*PTS,fps=%FPS%,scale=%WIDTH%:-1:flags=lanczos [x]; [x][1:v] paletteuse" -y %GIF% 2>> %LOGFILE%
 goto :eof
 
 
